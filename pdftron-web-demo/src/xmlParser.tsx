@@ -2,10 +2,11 @@
 import { DOMParser, XMLSerializer } from "@xmldom/xmldom";
 import { imageData } from "./imageData";
 
+export const size = 200;
+
 export const transformToIssueXml = (source: string): string => {
   const parser = new DOMParser();
   const obj = parser.parseFromString(source, "text/xml");
-  const size = 50;
   const newAnnots = document.createElement("annots", { is: "" });
   const issueAnnots = obj.getElementsByTagName("issue");
 
@@ -15,7 +16,6 @@ export const transformToIssueXml = (source: string): string => {
     const page = issue.getAttribute("page")!;
     const x = parseInt(issue.getAttribute("x")!);
     const y = parseInt(issue.getAttribute("y")!);
-
     const newElement = document.createElement("stamp");
     const rec = `${x},${y},${x + size},${y + size}`;
     const imagedata = document.createElement("imagedata");
