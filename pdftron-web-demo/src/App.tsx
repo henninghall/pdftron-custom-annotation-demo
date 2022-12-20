@@ -3,9 +3,14 @@ import "./App.css";
 
 import WebViewer, { WebViewerInstance } from "@pdftron/webviewer";
 import { initIssueAnnotation } from "./IssueAnnotation";
+import { transformToIssueXml } from "./xmlParser";
+
+const xfdf = `<annots><issue id="1" page="0" x="1000" y="900"/><issue id="2" page="0" x="1100" y="900" /></annots>`;
 
 function App() {
   const [ref, setRef] = useState<WebViewerInstance>();
+
+  transformToIssueXml(xfdf);
 
   useEffect(() => {
     WebViewer(
@@ -37,22 +42,6 @@ function Content({ instance }: { instance: WebViewerInstance }) {
     <>
       <button
         onClick={async () => {
-          const xfdf = `
-          <annots>
-            <issue
-                id="1" 
-                page="0" 
-                x="1000"
-                y="900"
-              />
-              <issue
-                id="2" 
-                page="0" 
-                x="1100"
-                y="900"
-              />
-            </annots>`;
-
           await annotationManager!.importAnnotations(xfdf);
         }}
       >
