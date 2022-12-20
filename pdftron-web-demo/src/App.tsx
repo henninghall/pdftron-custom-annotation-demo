@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import "./App.css";
 
 import WebViewer, { Core, WebViewerInstance } from "@pdftron/webviewer";
+import { pin } from "./pin";
 
 function App() {
   const [ref, setRef] = useState<WebViewerInstance>();
@@ -41,26 +42,27 @@ function App() {
 function Content({ instance }: { instance: WebViewerInstance }) {
   const { Annotations, annotationManager } = instance.Core;
 
-  class IssueAnnotation extends Annotations.CustomAnnotation {
+  class IssueAnnotation extends (Annotations as typeof Core.Annotations)
+    .StampAnnotation {
     constructor(...args: any[]) {
-      super("issue"); // provide the custom XFDF element name
-      this.Subject = "issue";
+      super(...args); // provide the custom XFDF element name
+      // this.Subject = "issue";
     }
     draw(ctx: any, pageMatrix: any, ...args: any[]) {
+      super.draw(ctx, pageMatrix);
       // the setStyles function is a function on markup annotations that sets up
       // certain properties for us on the canvas for the annotation's stroke thickness.
-      this.setStyles(ctx, pageMatrix);
-
+      // this.setStyles(ctx, pageMatrix);
       // first we need to translate to the annotation's x/y coordinates so that it's
       // drawn in the correct location
-      ctx.translate(this.X, this.Y);
-      ctx.beginPath();
-      ctx.moveTo(this.Width / 2, 0);
-      ctx.lineTo(this.Width, this.Height);
-      ctx.lineTo(0, this.Height);
-      ctx.closePath();
-      ctx.fill();
-      ctx.stroke();
+      // ctx.translate(this.X, this.Y);
+      // ctx.beginPath();
+      // ctx.moveTo(this.Width / 2, 0);
+      // ctx.lineTo(this.Width, this.Height);
+      // ctx.lineTo(0, this.Height);
+      // ctx.closePath();
+      // ctx.fill();
+      // ctx.stroke();
     }
   }
 
@@ -71,18 +73,22 @@ function Content({ instance }: { instance: WebViewerInstance }) {
         x: element.getAttribute("x"),
         y: element.getAttribute("y"),
       };
-      if (!attrs.x || !attrs.y) throw new Error("x or y is missing");
-      const x = parseInt(attrs.x);
-      const y = parseInt(attrs.y);
-      const rect = [x, y, x + 100, y + 100].join(",");
-      element.setAttribute("rect", rect);
+
+      if (attrs.x && attrs.y) {
+        const x = parseInt(attrs.x);
+        const y = parseInt(attrs.y);
+        const rect = [x, y, x + 100, y + 100].join(",");
+        element.setAttribute("rect", rect);
+      }
+      // options.originalDeserialize = Annotations.StampAnnotation.prototype.deserialize
+      // (element, pageMatrix);
       options.originalDeserialize(element, pageMatrix);
     }
   );
 
   // this is necessary to set the elementName before instantiation
   IssueAnnotation.prototype.elementName = "issue";
-  const bool = annotationManager.registerAnnotationType(
+  annotationManager.registerAnnotationType(
     IssueAnnotation.prototype.elementName,
     IssueAnnotation
   );
@@ -93,17 +99,17 @@ function Content({ instance }: { instance: WebViewerInstance }) {
         onClick={async () => {
           const xfdf = `
           <annots>
-            <issue 
-            name="issue-id"
-            style="solid" 
-            width="50" 
-            color="#ff0000" 
-            page="0" 
-            x="1200"
-            y="850"
-            />
+            <issue
+              creationdate="D:20221018150338Z" 
+              flags="print" 
+              date="20171226120150-08'00'"
+              name="issueid" 
+              page="0" 
+              rect="1000.32,841.743,1202.49,1000.043"
+              >
+                <imagedata>${pin.asset}</imagedata>
+            </issue>
             </annots>`;
-          // rect="1100,850,1210,960"
 
           console.log("importing annotations");
           const annots = await annotationManager!.importAnnotations(xfdf);
