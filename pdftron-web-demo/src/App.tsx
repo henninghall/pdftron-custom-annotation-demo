@@ -5,12 +5,10 @@ import WebViewer, { WebViewerInstance } from "@pdftron/webviewer";
 import { initIssueAnnotation } from "./IssueAnnotation";
 import { transformToIssueXml } from "./xmlParser";
 
-const xfdf = `<annots><issue id="1" page="0" x="1000" y="900"/><issue id="2" page="0" x="1100" y="900" /></annots>`;
+export const xfdf = `<xfdf xmlns="http://ns.adobe.com/xfdf/" xml:space="preserve"><annots><issue id="1" page="0" x="1000" y="900"/><issue id="2" page="0" x="1100" y="900" /></annots></xfdf>`;
 
 function App() {
   const [ref, setRef] = useState<WebViewerInstance>();
-
-  transformToIssueXml(xfdf);
 
   useEffect(() => {
     WebViewer(
@@ -36,16 +34,24 @@ function App() {
 
 function Content({ instance }: { instance: WebViewerInstance }) {
   const { annotationManager } = instance.Core;
-  initIssueAnnotation(instance);
 
   return (
     <>
       <button
         onClick={async () => {
+          initIssueAnnotation(instance);
           await annotationManager!.importAnnotations(xfdf);
         }}
       >
-        Import annotations
+        Import annotations (custom annotation)
+      </button>
+      <button
+        onClick={async () => {
+          const annots = transformToIssueXml(xfdf);
+          await annotationManager!.importAnnotations(annots);
+        }}
+      >
+        Import annotations (transform)
       </button>
       <button
         onClick={async () => {
