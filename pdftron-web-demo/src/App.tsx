@@ -1,8 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import "./App.css";
-import reactLogo from "./assets/react.svg";
 
-import WebViewer, { WebViewerInstance } from "@pdftron/webviewer";
+import WebViewer, { Core, WebViewerInstance } from "@pdftron/webviewer";
 
 function App() {
   const [ref, setRef] = useState<WebViewerInstance>();
@@ -65,41 +64,19 @@ function Content({ instance }: { instance: WebViewerInstance }) {
     }
   }
 
-  Annotations.setCustomSerializeHandler(
-    IssueAnnotation,
-    function (element, pageMatrix, options) {
-      console.log("serilize", { element, options });
-
-      // const annot = options.annotation;
-      options.originalSerialize(element, pageMatrix);
-      // if (annot.Width > 100) {
-      //   element.setAttribute("myAttr", annot.myProperty);
-      // }
-      return element;
-    }
-  );
-
   Annotations.setCustomDeserializeHandler(
-    IssueAnnotation,
+    IssueAnnotation as any as Core.Annotations.Annotation,
     function (element, pageMatrix, options) {
-      const annot = options.annotation;
-      const x = element.getAttribute("x");
-      const y = element.getAttribute("y");
-      console.log("deserilize", {
-        element,
-        options,
+      const attrs = {
+        x: element.getAttribute("x"),
         y: element.getAttribute("y"),
-        rect: element.getAttribute("rect"),
-        a: element,
-      });
-
-      if (!x || !y) throw new Error("x or y is missing");
-      annot["rect"] = [x, y, x + 100, y + 100].join(",");
+      };
+      if (!attrs.x || !attrs.y) throw new Error("x or y is missing");
+      const x = parseInt(attrs.x);
+      const y = parseInt(attrs.y);
+      const rect = [x, y, x + 100, y + 100].join(",");
+      element.setAttribute("rect", rect);
       options.originalDeserialize(element, pageMatrix);
-
-      // if (annot.Width > 100) {
-      //   annot.myProperty = element.getAttribute('myAttr');
-      // }
     }
   );
 
@@ -109,7 +86,6 @@ function Content({ instance }: { instance: WebViewerInstance }) {
     IssueAnnotation.prototype.elementName,
     IssueAnnotation
   );
-  console.log("bool", bool);
 
   return (
     <>
@@ -118,11 +94,13 @@ function Content({ instance }: { instance: WebViewerInstance }) {
           const xfdf = `
           <annots>
             <issue 
-              name="issue-id"
-              x="1000"
-              y="900"
-              page="0" 
-               rect="1100,850,1210,960"
+            name="issue-id"
+            style="solid" 
+            width="50" 
+            color="#ff0000" 
+            page="0" 
+            x="1200"
+            y="850"
             />
             </annots>`;
           // rect="1100,850,1210,960"
