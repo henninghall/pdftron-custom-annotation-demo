@@ -17,13 +17,13 @@ export const transformToIssueXml = (source: string): string => {
     const x = parseInt(issue.getAttribute("x")!);
     const y = parseInt(issue.getAttribute("y")!);
     const newElement = document.createElement("stamp");
-    const rec = `${x},${y},${x + size},${y + size}`;
+    const rect = `${x},${y},${x + size},${y + size}`;
     const imagedata = document.createElement("imagedata");
     imagedata.innerHTML = imageData;
     newElement.appendChild(imagedata);
     newElement.setAttribute("id", id);
     newElement.setAttribute("page", page);
-    newElement.setAttribute("rect", rec);
+    newElement.setAttribute("rect", rect);
     const serializer = new XMLSerializer();
     newAnnots.appendChild(newElement);
     return lowerCaseTags(removeXmlns(serializer.serializeToString(newAnnots)));
