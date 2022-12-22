@@ -3,9 +3,9 @@ import "./App.css";
 
 import WebViewer, { WebViewerInstance } from "@pdftron/webviewer";
 import { initIssueAnnotation } from "./IssueAnnotation";
+import { pdfDocument } from "./pdfDocument";
+import { xfdf } from "./xfdf";
 import { transformToIssueXml } from "./xmlParser";
-
-export const xfdf = `<xfdf xmlns="http://ns.adobe.com/xfdf/" xml:space="preserve"><annots><issue id="1" page="0" x="1000" y="900"/><issue id="2" page="0" x="1100" y="900" /></annots></xfdf>`;
 
 function App() {
   const [ref, setRef] = useState<WebViewerInstance>();
@@ -18,9 +18,7 @@ function App() {
       document.getElementById("viewer")!
     ).then((instance) => {
       setRef(instance);
-      instance.UI.loadDocument(
-        "https://testibinderstatic.z16.web.core.windows.net/test/A03-57-002.PDF"
-      );
+      instance.UI.loadDocument(pdfDocument);
     });
   }, []);
 
@@ -36,7 +34,7 @@ function Content({ instance }: { instance: WebViewerInstance }) {
   const { annotationManager } = instance.Core;
 
   return (
-    <>
+    <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
       <button
         onClick={async () => {
           initIssueAnnotation(instance);
@@ -51,17 +49,17 @@ function Content({ instance }: { instance: WebViewerInstance }) {
           await annotationManager!.importAnnotations(annots);
         }}
       >
-        Import annotations (transform)
+        Import annotations (transform xml)
       </button>
       <button
         onClick={async () => {
-          const annots = await annotationManager!.exportAnnotations();
-          console.log(annots);
+          const annots = annotationManager!.getAnnotationsList();
+          annotationManager!.deleteAnnotations(annots);
         }}
       >
-        Export annotations
+        Delete annotations
       </button>
-    </>
+    </div>
   );
 }
 

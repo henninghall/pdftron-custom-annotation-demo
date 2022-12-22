@@ -1,9 +1,9 @@
-// import { XMLParser, XMLBuilder, XMLValidator } from "fast-xml-parser";
 import { DOMParser, XMLSerializer } from "@xmldom/xmldom";
 import { imageData } from "./imageData";
 
 export const size = 200;
 
+// Alternative to custom annotation
 export const transformToIssueXml = (source: string): string => {
   const parser = new DOMParser();
   const obj = parser.parseFromString(source, "text/xml");
@@ -24,11 +24,11 @@ export const transformToIssueXml = (source: string): string => {
     newElement.setAttribute("id", id);
     newElement.setAttribute("page", page);
     newElement.setAttribute("rect", rect);
-    const serializer = new XMLSerializer();
     newAnnots.appendChild(newElement);
-    return lowerCaseTags(removeXmlns(serializer.serializeToString(newAnnots)));
   }
-  throw Error("invalid format");
+
+  const serializer = new XMLSerializer();
+  return lowerCaseTags(removeXmlns(serializer.serializeToString(newAnnots)));
 };
 
 const removeXmlns = (xml: string) =>
