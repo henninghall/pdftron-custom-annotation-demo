@@ -1,41 +1,47 @@
-import { DOMParser, XMLSerializer } from "@xmldom/xmldom";
+import { XMLBuilder, XMLParser } from "fast-xml-parser";
 import { imageData } from "./imageData";
 
 export const size = 200;
 
 // Alternative to custom annotation
-export const transformToIssueXml = (source: string): string => {
-  const parser = new DOMParser();
-  const obj = parser.parseFromString(source, "text/xml");
-  const newAnnots = document.createElement("annots", { is: "" });
-  const issueAnnots = obj.getElementsByTagName("issue");
+export const transformToIssueXml = (source: string, image: string): string => {
+  const issuePaths = new Set<string>();
+  const parser = new XMLParser({
+    ignoreAttributes: false,
+    attributeValueProcessor: (_, __, jPath) => {
+      if (jPath.endsWith(".issue")) issuePaths.add(jPath);
+    },
+  });
+  const jsonObj = parser.parse(source);
 
-  for (let index = 0; index < issueAnnots.length; index++) {
-    const issue = issueAnnots[index];
-    const id = issue.getAttribute("id")!;
-    const page = issue.getAttribute("page")!;
-    const x = parseInt(issue.getAttribute("x")!);
-    const y = parseInt(issue.getAttribute("y")!);
-    const newElement = document.createElement("stamp");
-    const rect = `${x},${y},${x + size},${y + size}`;
-    const imagedata = document.createElement("imagedata");
-    imagedata.innerHTML = imageData;
-    newElement.appendChild(imagedata);
-    newElement.setAttribute("id", id);
-    newElement.setAttribute("page", page);
-    newElement.setAttribute("rect", rect);
-    newAnnots.appendChild(newElement);
-  }
+  issuePaths.forEach((issuesPath) => {
+    const pathParts = issuesPath.split(".");
 
-  const serializer = new XMLSerializer();
-  return lowerCaseTags(removeXmlns(serializer.serializeToString(newAnnots)));
+    const issuesParent = pathParts.reduce(
+      (acc, cur, currentIndex, array) =>
+        currentIndex === array.length - 1 ? acc : acc[cur],
+      jsonObj
+    );
+    const issueNode = issuesParent.issue;
+
+    issuesParent.stamp = Array.isArray(issueNode)
+      ? issueNode.map(toImage)
+      : toImage(issueNode);
+
+    delete issuesParent.issue;
+  });
+
+  const builder = new XMLBuilder({ ignoreAttributes: false });
+  return builder.build(jsonObj);
 };
 
-const removeXmlns = (xml: string) =>
-  xml.replaceAll(` xmlns=\"http://www.w3.org/1999/xhtml\"`, ``);
-
-const lowerCaseTags = (xml: string) =>
-  xml
-    .replaceAll(`ANNOTS`, `annots`)
-    .replaceAll(`IMAGEDATA`, `imagedata`)
-    .replaceAll(`STAMP`, `stamp`);
+const toImage = (issue: any) => {
+  const x = parseInt(issue["@_x"]);
+  const y = parseInt(issue["@_y"]);
+  return {
+    "@_id": issue["@_id"],
+    "@_page": issue["@_page"],
+    "@_rect": `${x},${y},${x + size},${y + size}`,
+    imagedata: imageData,
+  };
+};
