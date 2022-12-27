@@ -9,13 +9,10 @@ describe("xmlParser", () => {
     <xfdf>
       <issue id="1" page="0" x="100" y="200"/>
     </xfdf>`;
-
     const expected = `
-    <xfdf>
-      <stamp id="1" page="0" rect="100,200,300,400">
-        ${image}
-      </stamp>
-    </xfdf>`;
+      <xfdf>
+        <stamp id="1" page="0" rect="100,200,300,400">${image}</stamp>
+      </xfdf>`;
     expectEqualXml(transformIssueXml(xfdf), expected);
   });
 
@@ -70,6 +67,20 @@ describe("xmlParser", () => {
       <stamp id="2" page="0" rect="300,400,500,600">${image}</stamp>
     </xfdf>
       `;
+    expectEqualXml(transformIssueXml(xfdf), expected);
+  });
+
+  it("should keep any random element", () => {
+    const xfdf = `
+    <xfdf>
+      <issue id="1" page="0" x="100" y="200"/>
+      <circle page="0" />
+    </xfdf>`;
+    const expected = `
+      <xfdf>
+        <stamp id="1" page="0" rect="100,200,300,400">${image}</stamp>
+        <circle page="0" />
+      </xfdf>`;
     expectEqualXml(transformIssueXml(xfdf), expected);
   });
 });
